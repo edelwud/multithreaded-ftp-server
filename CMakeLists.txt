@@ -1,48 +1,45 @@
 cmake_minimum_required(VERSION 3.10)
 
-# set the project name
-project(FTPServer C CXX)
+include(cmake/main.cmake)
 
-# add the executable
-add_executable(
-    FTPServer src/main.cpp
-    
-    src/Network/Server.h 
-    src/Network/Server.cpp
-    
-    src/Network/Response.cpp 
-    src/Network/Response.h 
-    
-    src/Network/Client.h
-    src/Network/Client.cpp 
-    
-    src/Network/StatusCodes.h
+get_project_name("${CMAKE_CURRENT_SOURCE_DIR}" "PROJECT_NAME")
+project(${PROJECT_NAME}
+        VERSION 0.1.1
+        DESCRIPTION "High performance FTP server")
 
-    src/Command/Command.h
-    src/Command/Command.cpp
+include(GNUInstallDirs)
 
-    src/Filesystem/Executor.h
-    src/Filesystem/Executor.cpp
+set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install")
+set(CMAKE_CXX_STANDARD 17)
 
-    src/Logger.h
-    src/Logger.cpp
+CPMAddPackage(
+        NAME magic_enum
+        GITHUB_REPOSITORY Neargye/magic_enum
+        GIT_TAG v0.7.2
+        OPTIONS "MAGIC_ENUM_OPT_BUILD_EXAMPLES NO;MAGIC_ENUM_OPT_BUILD_TESTS NO"
+)
 
-    src/Network/DataChannel.cpp
-    src/Network/DataChannel.h
+CPMAddPackage(
+        NAME GTest
+        GITHUB_REPOSITORY google/googletest
+        GIT_TAG release-1.11.0
+)
 
-    src/Exception/LostConnection.h
-    src/Exception/UndefinedCommand.h
-    src/Exception/NotLogged.h
-    src/Exception/NoDataConnection.h
-    src/Exception/AlreadyDeclared.h
-    src/Exception/LoggedSuccessfully.h)
+CPMAddPackage(
+        NAME libuv
+        GITHUB_REPOSITORY libuv/libuv
+        GIT_TAG v1.41.0
+        OPTIONS "LIBUV_BUILD_BENCH NO;LIBUV_BUILD_TESTS NO"
+)
 
-set_property(TARGET FTPServer PROPERTY CXX_STANDARD 14)
+find_package(OpenSSL)
+if(NOT OPENSSL_FOUND)
+    CPMAddPackage(
+            NAME openssl
+            GITHUB_REPOSITORY microcai/openssl-cmake
+            GIT_TAG master
+    )
+endif()
 
-# including pthread.h library
-SET(THREADS_PREFER_PTHREAD_FLAG TRUE)
-FIND_PACKAGE(Threads REQUIRED)
-TARGET_LINK_LIBRARIES(FTPServer Threads::Threads)
-TARGET_COMPILE_OPTIONS(FTPServer INTERFACE Threads::Threads)
+initialize_project(${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(FTPServer stdc++fs)
